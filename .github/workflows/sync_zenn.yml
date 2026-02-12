@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - 'zenn/**' # zennフォルダに変更があった時だけ動く
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   sync:
