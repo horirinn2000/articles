@@ -1,5 +1,13 @@
 {
   "devDependencies": {
-    "@qiita/qiita-cli": "^1.7.0"
+    "@qiita/qiita-cli": "^1.7.0",
+    "zenn-cli": "^0.4.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "qiita:new": "cd qiita && npx qiita new",
+    "qiita:preview": "cd qiita && npx qiita preview",
+    "zenn:new": "cd zenn && npx zenn new:article",
+    "zenn:preview": "cd zenn && npx zenn preview"
   }
 }
