@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+
+# Qiita
+qiita/node_modules/
+qiita/public/*.html
+qiita/.env
+.remote
+
+# Zenn
+zenn/node_modules/
