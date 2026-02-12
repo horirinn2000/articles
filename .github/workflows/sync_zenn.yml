@@ -1,0 +1,34 @@
+name: Sync to Zenn Branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'zenn/**' # zennフォルダに変更があった時だけ動く
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Push to zenn-deploy branch
+        run: |
+          # zenn-deployブランチがあれば削除して作り直す（常に最新の状態にするため）
+          git branch -D zenn-deploy || true
+          git checkout -b zenn-deploy
+          
+          # ルートのファイルを退避（必要な場合）
+          # ここではシンプルに、zennフォルダの中身をルートに持ってくる
+          git filter-branch --subdirectory-filter zenn --force
+          
+          # 強制プッシュ
+          git push -f origin zenn-deploy
