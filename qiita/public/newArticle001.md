@@ -1,14 +1,14 @@
 ---
 title: 【GCP】「コードを眺める」のは最後にしろ。爆速ボトルネック特定フロー（Log Analytics → Trace → Profiler）
 tags:
-  - GoogleCloud
   - Go
-  - Performance
-  - Observability
+  - performance
+  - observability
+  - GoogleCloud
   - CloudRun
 private: true
-updated_at: ''
-id: null
+updated_at: '2026-02-17T09:01:51+09:00'
+id: 1f21837f3c0a49eb7862
 organization_url_name: null
 slide: false
 ignorePublish: false
