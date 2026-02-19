@@ -91,6 +91,9 @@ WITH FormattedLogs AS (
 SELECT
   request_method,
   request_url,
+  -- リクエスト数
+  COUNT(*) AS count,
+  -- 平均値
   AVG(latency_sec) AS avg_latency,
   -- 99パーセンタイル値
   APPROX_QUANTILES(latency_sec, 100)[OFFSET(99)] AS p99_latency,
