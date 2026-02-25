@@ -2,13 +2,13 @@
 title: 【Go】Cloud RunでAlpineを卒業しよう。Distroless採用時の「デバッグ」と「CI/検証環境」の正解パターン
 tags:
   - Go
+  - alpine
+  - distroless
+  - GoogleCloud
   - CloudRun
-  - Distroless
-  - Alpine
-  - GCP
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-02-25T09:12:39+09:00'
+id: dca5d89606639ef5fb62
 organization_url_name: null
 slide: false
 ignorePublish: false
