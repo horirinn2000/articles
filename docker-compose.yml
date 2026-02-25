@@ -1,0 +1,7 @@
+# docker-compose.yml
+
+services:
+  app:
+    build:
+      context: .
+      target: dev  # ここで "dev" ステージを指定してビルド！
