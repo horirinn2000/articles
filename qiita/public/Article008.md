@@ -1,14 +1,13 @@
 ---
 title: 【GCP】ログが30日で消える？Cloud Logging「長期保存」の最適解とBigQuery連携による敗者復活戦
 tags:
-  - GCP
-  - CloudLogging
   - BigQuery
   - SRE
   - GoogleCloud
+  - CloudLogging
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-03-05T10:14:54+09:00'
+id: 8f64464659b442a13ade
 organization_url_name: null
 slide: false
 ignorePublish: false
