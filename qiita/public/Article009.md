@@ -1,14 +1,16 @@
 ---
-title: 【GCP】Cloud TraceとOpenTelemetryで「遅い処理」を特定する。Spannerのエンドツーエンドトレースと「スパンスパイク」による課金死を防ぐ
+title: >-
+  【GCP】Cloud
+  TraceとOpenTelemetryで「遅い処理」を特定する。Spannerのエンドツーエンドトレースと「スパンスパイク」による課金死を防ぐ
 tags:
-  - 'Go'
-  - 'GCP'
-  - 'CloudTrace'
-  - 'OpenTelemetry'
-  - 'Spanner'
+  - Go
+  - Spanner
+  - GoogleCloud
+  - opentelemetry
+  - CloudTrace
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-03-12T14:35:51+09:00'
+id: a1ef2fb3340b1fd3e17e
 organization_url_name: null
 slide: false
 ignorePublish: false
