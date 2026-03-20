@@ -25,7 +25,7 @@ ignorePublish: false
 
 さらに、社内向けツールとはいえ、管理画面をインターネットにフルオープンにするのはセキュリティ的にNGです。
 
-そこで今回は、Metabase を Cloud Run で構築しつつ、以下の2点で**「本番サービスを守りつつ、セキュリティも担保する」**構成を紹介します。
+そこで今回は、Metabase を Cloud Run で構築しつつ、以下の2点で**本番サービスを守りつつ、セキュリティも担保する**構成を紹介します。
 
 1. **Cloud SQL Read Replica**: 重いクエリをレプリカに逃がし、本番環境への影響をゼロにする。
 2. **Nginx サイドカー**: Cloud Armor（有料）や外部ロードバランサを使わずに、コンテナだけで強固な IP 制限をかける。
@@ -99,6 +99,14 @@ http {
 
 サイドカー構成は `gcloud` コマンドの引数だけで構築しようとすると非常に複雑になるため、YAMLファイル（`service.yaml`）を定義してデプロイするのがベストプラクティスです。
 
+> **🚨 注意1: JavaアプリとUnixソケットの深刻な罠**
+> Cloud Run には Cloud SQL 接続用の便利なアノテーション（Unixソケット経由）がありますが、**Java（Metabase本体）の標準DBドライバはUnixソケット通信にネイティブ対応していません。** そのため、公式イメージをそのままアノテーションで繋ごうとすると `UnknownHostException` 等で立ち上がらずクラッシュします。
+> この罠を回避するため、本記事では **Cloud SQL Auth Proxy** の公式コンテナを「3つ目のサイドカー」として相乗りさせ、内部的に TCPポート（`127.0.0.1:3306`, `3307`）へ変換してあげるアーキテクチャを採用しています。
+
+> **⚠️ 注意2: Metabase 用の「管理データベース（Primary）」について**
+> この構成では、Cloud SQL インスタンスを「分析対象の Read Replica」と「Metabase自体のシステムデータを保存する Primary」の**2種類**指定します。
+> Metabase は「ユーザー情報」や「ダッシュボードの設定」を保存（書き込み）する必要があるため、Read Replica（読み取り専用）では起動できません。本番サービスと同じ Primary の中に `metabase_app_db` などの専用データベースを事前に `CREATE DATABASE` して準備しておいてください。
+
 ```yaml
 apiVersion: serving.knative.dev/v1
 kind: Service
@@ -108,8 +116,8 @@ spec:
   template:
     metadata:
       annotations:
-        # Cloud SQL の Primary(Metabaseの管理データ用) と Replica(分析対象データ用) の両方をマウント
-        run.googleapis.com/cloudsql-instances: "PROJECT:REGION:PRIMARY_INSTANCE,PROJECT:REGION:REPLICA_INSTANCE"
+        # Metabaseの起動完了を待ってからNginxにトラフィックを流す
+        run.googleapis.com/depends-on: "nginx=metabase"
     spec:
       containers:
         # --- 1. Nginx (Ingress / 門番役) ---
@@ -126,26 +134,48 @@ spec:
         - name: metabase
           image: metabase/metabase:latest
           env:
-            # Metabase自身の管理データ保存先 (ここはPrimaryを指定)
+            # Metabase自身の管理データ保存先
             - name: MB_DB_TYPE
               value: "mysql" # PostgreSQLの場合は "postgres"を指定
             - name: MB_DB_DBNAME
               value: "metabase_app_db"
             - name: MB_DB_PORT
-              value: "3306"
+              value: "3306"  # Proxyが開放するPrimary用ポート
             - name: MB_DB_USER
               value: "metabase_user"
             - name: MB_DB_PASS
               value: "password"
             - name: MB_DB_HOST
-              value: "/cloudsql/PROJECT:REGION:PRIMARY_INSTANCE"
+              value: "127.0.0.1"  # Proxyコンテナ経由で接続
             # Metabaseはポート3000で起動（Ingressコンテナからのみアクセス可能）
             - name: MB_JETTY_PORT
               value: "3000"
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 15 # Metabaseは起動に時間がかかるため長めに設定
           resources:
             limits:
               cpu: 2000m
               memory: 4Gi
+
+        # --- 3. Cloud SQL Auth Proxy (DB接続用サイドカー) ---
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+          args:
+            # Primaryを3306ポート、Replicaを3307ポートでローカルに開放
+            - "--address=0.0.0.0"
+            - "--port=3306"
+            - "PROJECT:REGION:PRIMARY_INSTANCE"
+            - "PROJECT:REGION:REPLICA_INSTANCE?port=3307"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
 ```
 
 準備ができたら、以下のコマンドでデプロイを実行します。
@@ -165,11 +195,14 @@ Cloud Run が無事に起動したら、許可されたネットワークから 
 
 管理画面の「データベースの追加」から、以下のように設定を行います。
 
-* **ホスト（Host）**: `/cloudsql/PROJECT:REGION:REPLICA_INSTANCE`
-    * ⚠️ **最重要ポイント**: ここで必ず **Read Replica のインスタンス名** を指定してください。
-    * Cloud Run からは Unix ソケット経由での接続となるため、`/cloudsql/〜` というソケットパスを直接入力します。
+* **ホスト（Host）**: `127.0.0.1`
+* **ポート（Port）**: `3307`
+    * ⚠️ **最重要ポイント**: コンテナ内でCloud SQL Proxyが動いているため、DBのホストは `127.0.0.1` となります。また、ポートとして **3307** を指定することで確実に **Read Replica** に接続されます。
 * **データベース名**: 分析対象の業務DB名
-* **ユーザー名 / パスワード**: 分析用に `CREATE USER` した**読み取り専用ユーザー（Read Only User）**の認証情報を設定するのが鉄則です。
+* **ユーザー名 / パスワード**: 分析用に `CREATE USER` した<strong>読み取り専用ユーザー（Read Only User）</strong>の認証情報を設定するのが鉄則です。
+
+> **💡 補足 (Private IP接続について)**
+> もし運用上の理由で Proxy コンテナ（オーバーヘッド）を挟みたくない場合、Cloud Run に Serverless VPC Access や Direct VPC Egress を設定し、ホストに Cloud SQL の Private IP（`10.x.x.x`）を直接指定して TCP 接続することも可能です。
 
 この設定により、Metabaseから発行されるクエリはすべてレプリカに向けられるため、本番サービス（Primary）への負荷はゼロになります。
 
