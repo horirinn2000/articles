@@ -1,14 +1,14 @@
 ---
 title: 【GCP】MetabaseをCloud Runで動かす。Read Replicaで負荷分散し、Nginxサイドカーで「IP制限」をかける鉄壁構成
 tags:
-  - metabase
-  - cloudrun
-  - cloudsql
   - nginx
-  - security
+  - Security
+  - cloudsql
+  - Metabase
+  - CloudRun
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-03-21T08:31:22+09:00'
+id: 8c567e8330dd4534c424
 organization_url_name: null
 slide: false
 ignorePublish: false
