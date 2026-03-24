@@ -2,13 +2,13 @@
 title: SPA（React/Vue）でデプロイしたのに画面が変わらない？Nginxのキャッシュ設定で解決する
 tags:
   - nginx
-  - React
   - Vue.js
-  - フロントエンド
   - Cache
+  - フロントエンド
+  - React
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-03-24T16:18:29+09:00'
+id: 4218e1d3a1a747194d04
 organization_url_name: null
 slide: false
 ignorePublish: false
