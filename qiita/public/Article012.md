@@ -1,14 +1,14 @@
 ---
 title: Firestoreの課金を抑える！画面別データ保存の落とし穴とコスパ最強の実装術
 tags:
-  - Firestore
-  - Firebase
   - アーキテクチャ
   - フロントエンド
+  - Firebase
+  - Firestore
   - コスト削減
 private: false
-updated_at: ''
-id: null
+updated_at: '2026-04-04T19:37:49+09:00'
+id: 461ad60d07e4a98c17c7
 organization_url_name: null
 slide: false
 ignorePublish: false
